@@ -51,7 +51,7 @@ public class Main {
                 addr.add(kv[0], kv[1]);
             }
         }
-        configuration.setAddress(addr);
+        configuration.setAddresses(addr);
         ModelExporter.toDmr(configuration);
     }
 }

@@ -52,7 +52,6 @@ public class ModelExporter {
                 OutputStream out = Files.newOutputStream(configuration.getTargetFile())
         ) {
 
-            final ModelNode address = configuration.getAddress();
             final ModelNode[] addresses = configuration.getAddresses();
 
             final Set<String> requiredExtensions = configuration.getRequiredExtensions();
@@ -66,19 +65,22 @@ public class ModelExporter {
                 throw new RuntimeException(String.format("Running configuration is missing the following required extensions: %s", requiredExtensions));
             }
 
-            final ModelNode operation = Operations.createOperation("read-resource-description", address);
-            operation.get("operations").set(true);
-            operation.get("inherited").set(false);
-            operation.get("recursive").set(true);
+            final Operations.CompositeOperationBuilder builder = Operations.CompositeOperationBuilder.create();
+            for (ModelNode addr : addresses) {
+                final ModelNode operation = Operations.createOperation("read-resource-description", addr);
+                operation.get("operations").set(true);
+                operation.get("inherited").set(false);
+                operation.get("recursive").set(true);
+                builder.addStep(operation);
+            }
             try {
-                final ModelNode result = executeForResult(client, operation);
+                final ModelNode result = executeForResult(client, builder.build().getOperation());
+                System.out.println("result = " + result.toString().substring(0, 5000));
 
-                System.out.println("filter out result");
-                ModelNode res = result.clone();
-                res.get("children");
-                res.get("possible-capabilities").set(getPossibleCapabilities(client));
-                res.get("version-info").set(getVersionInfo(client));
-                res.writeExternal(new DataOutputStream(out));
+                // TODO recombine the different operation result with their respective path addresses
+                result.get("possible-capabilities").set(getPossibleCapabilities(client));
+                result.get("version-info").set(getVersionInfo(client));
+                result.writeExternal(new DataOutputStream(out));
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

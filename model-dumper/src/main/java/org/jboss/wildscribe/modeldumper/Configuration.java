@@ -37,7 +37,6 @@ public class Configuration {
     private String protocol;
     private String hostName;
     private int port;
-    private ModelNode address;
     private ModelNode[] addresses;
 
     @SuppressWarnings("MagicNumber")
@@ -47,8 +46,8 @@ public class Configuration {
         this.protocol = null;
         this.hostName = "localhost";
         this.port = 9990;
-        this.address = new ModelNode().setEmptyList();
-        this.addresses = new ModelNode[0];
+        // by default, read from the root resource
+        this.addresses = new ModelNode[] { new ModelNode().setEmptyList() };
     }
 
     /**
@@ -63,44 +62,23 @@ public class Configuration {
     }
 
     /**
-     * The address where the model should be dumped from. The default is {@code null}.
-     *
-     * @return the model where the model should be dumped from or {@code null}
-     */
-    public ModelNode getAddress() {
-        return address;
-    }
-
-    /**
      * The addresses where the model should be dumped from.
      *
-     * @return the model where the model should be dumped from or {@code null}
+     * @return the addresses where the model should be dumped from or an empty array to start from the root resource.
      */
     public ModelNode[] getAddresses() {
         return addresses;
     }
 
     /**
-     * Sets the address where the model should be dumped from.
+     * Sets the addresses where the model should be dumped from.
      *
-     * @param address the address where the model should be dumped from or {@code null} for the root resource
+     * @param addresses the address where the model should be dumped from.
      *
      * @return this configuration
      */
     public Configuration setAddresses(final ModelNode... addresses) {
         this.addresses = addresses;
-        return this;
-    }
-
-    /**
-     * Sets the address where the model should be dumped from.
-     *
-     * @param address the address where the model should be dumped from or {@code null} for the root resource
-     *
-     * @return this configuration
-     */
-    public Configuration setAddress(final ModelNode address) {
-        this.address = address;
         return this;
     }
 
