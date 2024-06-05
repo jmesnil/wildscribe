@@ -53,6 +53,7 @@ public class ModelExporter {
         ) {
 
             final ModelNode address = configuration.getAddress();
+            final ModelNode[] addresses = configuration.getAddresses();
 
             final Set<String> requiredExtensions = configuration.getRequiredExtensions();
             if (!requiredExtensions.isEmpty()) {
@@ -71,9 +72,13 @@ public class ModelExporter {
             operation.get("recursive").set(true);
             try {
                 final ModelNode result = executeForResult(client, operation);
-                result.get("possible-capabilities").set(getPossibleCapabilities(client));
-                result.get("version-info").set(getVersionInfo(client));
-                result.writeExternal(new DataOutputStream(out));
+
+                System.out.println("filter out result");
+                ModelNode res = result.clone();
+                res.get("children");
+                res.get("possible-capabilities").set(getPossibleCapabilities(client));
+                res.get("version-info").set(getVersionInfo(client));
+                res.writeExternal(new DataOutputStream(out));
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

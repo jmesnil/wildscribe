@@ -22,6 +22,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
@@ -39,6 +40,7 @@ import org.jboss.dmr.ModelNode;
 import org.jboss.wildscribe.modeldumper.Configuration;
 import org.jboss.wildscribe.modeldumper.ModelExporter;
 import org.jboss.wildscribe.site.Generator;
+import org.jboss.wildscribe.site.PathAddress;
 import org.wildfly.core.launcher.CommandBuilder;
 import org.wildfly.core.launcher.Launcher;
 import org.wildfly.core.launcher.StandaloneCommandBuilder;
@@ -83,6 +85,12 @@ public class GenerateSiteMojo extends AbstractMojo {
      */
     @Parameter(defaultValue = "9990", property = "wildscribe.management.port")
     private int port;
+
+    /**
+     * The JVM options used for starting the server.
+     */
+    @Parameter(alias = "path-addresses", property = "wildscribe.server.path.addresses")
+    private String[] pathAddresses = new String[0];
 
     /**
      * The JVM options used for starting the server.
@@ -252,7 +260,10 @@ public class GenerateSiteMojo extends AbstractMojo {
                     .setProtocol(protocol)
                     .setHostName(hostname)
                     .setPort(port);
-
+            if (pathAddresses.length > 0) {
+                ModelNode[] addrs = Arrays.stream(pathAddresses).map(a -> PathAddress.parseCLIStyleAddress(a).toModelNode()).toArray(ModelNode[]::new);
+                configuration.setAddresses(addrs);
+            }
 
             if (requiredExtensions != null && !requiredExtensions.isEmpty()) {
                 configuration.addRequiredExtensions(requiredExtensions);

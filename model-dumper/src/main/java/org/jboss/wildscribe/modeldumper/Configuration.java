@@ -38,6 +38,7 @@ public class Configuration {
     private String hostName;
     private int port;
     private ModelNode address;
+    private ModelNode[] addresses;
 
     @SuppressWarnings("MagicNumber")
     private Configuration(final Path targetFile) {
@@ -47,6 +48,7 @@ public class Configuration {
         this.hostName = "localhost";
         this.port = 9990;
         this.address = new ModelNode().setEmptyList();
+        this.addresses = new ModelNode[0];
     }
 
     /**
@@ -67,6 +69,27 @@ public class Configuration {
      */
     public ModelNode getAddress() {
         return address;
+    }
+
+    /**
+     * The addresses where the model should be dumped from.
+     *
+     * @return the model where the model should be dumped from or {@code null}
+     */
+    public ModelNode[] getAddresses() {
+        return addresses;
+    }
+
+    /**
+     * Sets the address where the model should be dumped from.
+     *
+     * @param address the address where the model should be dumped from or {@code null} for the root resource
+     *
+     * @return this configuration
+     */
+    public Configuration setAddresses(final ModelNode... addresses) {
+        this.addresses = addresses;
+        return this;
     }
 
     /**
