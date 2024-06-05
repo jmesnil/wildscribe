@@ -126,14 +126,14 @@ public class GenerateSiteMojo extends AbstractMojo {
      * The extensions that are required to be installed before the model is dumped. If any of these extensions do not
      * already exist on the server then they will be added.
      */
-    @Parameter(alias = "required-extensions", property = "wildscribte.required.extensions")
+    @Parameter(alias = "required-extensions", property = "wildscribe.required.extensions")
     private List<String> requiredExtensions;
 
     /**
      * The stability level of the server.
      * already exist on the server then they will be added.
      */
-    @Parameter(alias = "stability", property = "wildscribte.stability.level")
+    @Parameter(alias = "stability", property = "wildscribe.stability.level")
     private String stability;
 
     /**
