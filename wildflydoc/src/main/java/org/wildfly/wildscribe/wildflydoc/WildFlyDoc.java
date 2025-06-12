@@ -21,6 +21,9 @@ public class WildFlyDoc implements Runnable, QuarkusApplication {
         return new CommandLine(this, factory).execute(args);
     }
 
+    @CommandLine.Option(names = {"-f", "--feature-pack"}, required = true, description = "Feature pack GAV")
+    String featurePackGav;
+
     @CommandLine.Option(names = {"-m", "--model"}, required = true, description = "Model reference file (in JSON)")
     Path modelFile;
 
@@ -36,7 +39,7 @@ public class WildFlyDoc implements Runnable, QuarkusApplication {
     @Override
     public void run() {
         try {
-            siteGenerator.generate(modelFile, outputDirectory);
+            siteGenerator.generate(featurePackGav, modelFile, outputDirectory);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
