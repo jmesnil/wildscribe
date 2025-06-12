@@ -1,0 +1,10 @@
+{#if attributes.size > 0}
+<h2>Attributes ({attributes.size})</h2>
+{#for attribute in attributes}
+<ul>
+    <li>
+        <b>{attribute.name}</b>
+    </li>
+</ul>
+{/for}
+{/if}

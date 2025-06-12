@@ -6,26 +6,11 @@
 </head>
 <body>
 <p>{currentUrl}</p>
-<p>{breadcrumbs}</p>
+{#include breadcrumb /}
+<h1>{breadcrumbs.last.label}</h1>
+<h1></h1>
 <p>Description: {resource.description}</p>
-<code>
-    {resource.toString()}
-</code>
-<h1>{feature-pack}</h1>
-{#if resource.children.size > 0}
-<h2>Children ({resource.children.size})</h2>
-{#for child in resource.children}
-<ul>
-    <li>
-        <a href="/{child.name}">{child.name}</a>
-        {#for c in child.children}
-        <ul>
-            <li><a href="{child.name}/{c.name}/index.html">{c.name}</a></li>
-        </ul>
-    </li>
-    {/for}
-</ul>
-{/for}
-{/if}
+{#include children children=resource.children /}
+{#include attributes attributes=resource.attributes /}
 </body>
 </html>

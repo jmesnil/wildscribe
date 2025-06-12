@@ -54,12 +54,14 @@ public class SiteGenerator {
     private void generate(Path outputDirectory, String featurePackGAV, ModelNode rootDescription, PathElement... path) throws IOException {
         final Resource resource = Resource.fromModelNode(PathAddress.pathAddress(), rootDescription, Collections.emptyMap());
         final String currentUrl = buildCurrentUrl(path);
+        final String relativePathToContextRoot = createRelativePathToContextRoot(currentUrl);
         System.out.println("currentUrl = " + currentUrl);
 
         String content = resourceTemplate.data("feature-pack", featurePackGAV)
                 .data("currentUrl", currentUrl)
                 .data("resource", resource)
-                .data("breadcrumbs", Breadcrumb.build(new PathElement[]{}))
+                .data("breadcrumbs", Breadcrumb.build(path))
+                .data("relativePathToContextRoot", relativePathToContextRoot)
                 .render();
         Path dir = outputDirectory.resolve(currentUrl).normalize();
         writeToFile(content, dir.resolve("index.html"));
@@ -104,7 +106,16 @@ public class SiteGenerator {
         return sb.toString();
     }
 
-    private PathElement[] addToPath(PathElement[] path, final String key, final String value) {
+    static String createRelativePathToContextRoot(String relativeUrl) {
+        StringBuilder sb = new StringBuilder();
+        int length = relativeUrl.isEmpty() ? 0 : relativeUrl.split("/").length;
+        for (int i = 0; i < length; i++) {
+            sb.append("../");
+        }
+        return sb.toString();
+    }
+
+    private static PathElement[] addToPath(PathElement[] path, final String key, final String value) {
         PathElement[] newPath = new PathElement[path.length + 1];
         System.arraycopy(path, 0, newPath, 0, path.length);
         newPath[path.length] = new PathElement(key, value);
