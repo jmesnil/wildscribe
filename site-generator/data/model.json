@@ -1,0 +1,295 @@
+{"model": [{
+    "address" : [{
+        "deployment" : "*"
+    }],
+    "outcome" : "success",
+    "result" : {
+        "description" : "A deployment represents anything that can be deployed (e.g. an application such as Jakarta Enterprise Beans-JAR, WAR, EAR, any kind of standard archive such as RAR or JBoss-specific deployment) into a server.",
+        "access-constraints" : {"application" : {"deployment" : {"type" : "core"}}},
+        "attributes" : {
+            "content" : {
+                "type" : {
+                    "TYPE_MODEL_VALUE" : "LIST"
+                },
+                "description" : "List of pieces of content that comprise the deployment.",
+                "expressions-allowed" : false,
+                "required" : true,
+                "nillable" : false,
+                "min-length" : 1,
+                "max-length" : 1,
+                "value-type" : {
+                    "hash" : {
+                        "type" : {
+                            "TYPE_MODEL_VALUE" : "BYTES"
+                        },
+                        "description" : "The hash of managed deployment content that has been uploaded to the domain's or standalone server's deployment content repository.",
+                        "expressions-allowed" : false,
+                        "required" : true,
+                        "nillable" : true,
+                        "alternatives" : [
+                            "path",
+                            "relative-to"
+                        ],
+                        "min-length" : 20,
+                        "max-length" : 20
+                    },
+                    "path" : {
+                        "type" : {
+                            "TYPE_MODEL_VALUE" : "STRING"
+                        },
+                        "description" : "Path (relative or absolute) to unmanaged content that is part of the deployment.",
+                        "expressions-allowed" : false,
+                        "required" : true,
+                        "nillable" : true,
+                        "alternatives" : ["hash"],
+                        "min-length" : 1,
+                        "max-length" : 2147483647
+                    },
+                    "relative-to" : {
+                        "type" : {
+                            "TYPE_MODEL_VALUE" : "STRING"
+                        },
+                        "description" : "Name of a system path to which the value of the 'path' is relative. If not set, the 'path' is considered to be absolute.",
+                        "expressions-allowed" : false,
+                        "required" : false,
+                        "nillable" : true,
+                        "alternatives" : ["hash"],
+                        "requires" : ["path"],
+                        "min-length" : 1,
+                        "max-length" : 2147483647
+                    },
+                    "archive" : {
+                        "type" : {
+                            "TYPE_MODEL_VALUE" : "BOOLEAN"
+                        },
+                        "description" : "Flag indicating whether unmanaged content is a zip archive (true) or exploded (false).",
+                        "expressions-allowed" : false,
+                        "required" : false,
+                        "nillable" : true,
+                        "requires" : [
+                            "path",
+                            "hash"
+                        ]
+                    }
+                },
+                "access-type" : "read-only",
+                "storage" : "configuration"
+            },
+            "disabled-time" : {
+                "type" : {
+                    "TYPE_MODEL_VALUE" : "LONG"
+                },
+                "description" : "Last time the application was disabled",
+                "expressions-allowed" : false,
+                "required" : false,
+                "nillable" : true,
+                "unit" : "MILLISECONDS",
+                "access-type" : "read-only",
+                "storage" : "runtime"
+            },
+            "disabled-timestamp" : {
+                "type" : {
+                    "TYPE_MODEL_VALUE" : "STRING"
+                },
+                "description" : "Last timestamp the application was disabled. Format is yyyy-MM-dd HH:mm:ss,SSS zzz.",
+                "expressions-allowed" : false,
+                "required" : false,
+                "nillable" : true,
+                "min-length" : 1,
+                "max-length" : 2147483647,
+                "access-type" : "read-only",
+                "storage" : "runtime"
+            },
+            "enabled" : {
+                "type" : {
+                    "TYPE_MODEL_VALUE" : "BOOLEAN"
+                },
+                "description" : "Boolean indicating whether the deployment content is currently deployed in the runtime (or should be deployed in the runtime the next time the server starts.)",
+                "expressions-allowed" : false,
+                "required" : false,
+                "nillable" : true,
+                "default" : false,
+                "access-type" : "read-only",
+                "storage" : "configuration"
+            },
+            "enabled-time" : {
+                "type" : {
+                    "TYPE_MODEL_VALUE" : "LONG"
+                },
+                "description" : "Last time the application was enabled",
+                "expressions-allowed" : false,
+                "required" : false,
+                "nillable" : true,
+                "unit" : "MILLISECONDS",
+                "access-type" : "read-only",
+                "storage" : "runtime"
+            },
+            "enabled-timestamp" : {
+                "type" : {
+                    "TYPE_MODEL_VALUE" : "STRING"
+                },
+                "description" : "Last timestamp the application was enabled. Format is yyyy-MM-dd HH:mm:ss,SSS zzz.",
+                "expressions-allowed" : false,
+                "required" : false,
+                "nillable" : true,
+                "min-length" : 1,
+                "max-length" : 2147483647,
+                "access-type" : "read-only",
+                "storage" : "runtime"
+            },
+            "managed" : {
+                "type" : {
+                    "TYPE_MODEL_VALUE" : "BOOLEAN"
+                },
+                "description" : "Indicates if the deployment is managed (aka uses the ContentRepository).",
+                "expressions-allowed" : false,
+                "required" : true,
+                "nillable" : false,
+                "access-type" : "read-only",
+                "storage" : "runtime"
+            },
+            "name" : {
+                "type" : {
+                    "TYPE_MODEL_VALUE" : "STRING"
+                },
+                "description" : "Unique identifier of the deployment. Must be unique across all deployments.",
+                "expressions-allowed" : false,
+                "required" : true,
+                "nillable" : false,
+                "min-length" : 1,
+                "max-length" : 2147483647,
+                "access-type" : "read-only",
+                "storage" : "configuration"
+            },
+            "owner" : {
+                "type" : {
+                    "TYPE_MODEL_VALUE" : "OBJECT"
+                },
+                "description" : "Address of a resource that has indicated it controls the lifecycle of this deployment (e.g. a deployment scanner resource.) Will be undefined if no resource claimed ownership when the deployment was added.",
+                "expressions-allowed" : false,
+                "required" : false,
+                "nillable" : true,
+                "value-type" : {
+                    "TYPE_MODEL_VALUE" : "STRING"
+                },
+                "access-type" : "read-only",
+                "storage" : "configuration"
+            },
+            "persistent" : {
+                "type" : {
+                    "TYPE_MODEL_VALUE" : "BOOLEAN"
+                },
+                "description" : "Boolean indicating whether the existence of the deployment should be recorded in the persistent server configuration. Only relevant to a standalone mode server. Default is 'true'. A deployment managed by a deployment scanner would have this set to 'false' to ensure the deployment is only deployed at server start if the scanner again detects the deployment.",
+                "expressions-allowed" : false,
+                "required" : true,
+                "nillable" : false,
+                "access-type" : "read-only",
+                "storage" : "configuration"
+            },
+            "runtime-name" : {
+                "type" : {
+                    "TYPE_MODEL_VALUE" : "STRING"
+                },
+                "description" : "Name by which the deployment should be known within a server's runtime. This would be equivalent to the file name of a deployment file, and would form the basis for such things as default Java Enterprise Edition application and module names. This would typically be the same as 'name', but in some cases users may wish to have two deployments with the same 'runtime-name' (e.g. two versions of \"foo.war\") both available in the deployment content repository, in which case the deployments would need to have distinct 'name' values but would have the same 'runtime-name'.",
+                "expressions-allowed" : false,
+                "required" : true,
+                "nillable" : false,
+                "min-length" : 1,
+                "max-length" : 2147483647,
+                "access-type" : "read-only",
+                "storage" : "configuration"
+            },
+            "status" : {
+                "type" : {
+                    "TYPE_MODEL_VALUE" : "STRING"
+                },
+                "description" : "The current runtime status of a deployment. Possible status modes are OK, FAILED, and STOPPED. FAILED indicates a dependency is missing or a service could not start. STOPPED indicates that the deployment was not enabled or was manually stopped.",
+                "expressions-allowed" : false,
+                "required" : false,
+                "nillable" : true,
+                "access-type" : "metric",
+                "storage" : "runtime"
+            }
+        },
+        "operations" : null,
+        "notifications" : null,
+        "children" : {
+            "subsystem" : {
+                "description" : "Runtime resources created when the deployment is deployed, organized by the subsystem responsible for the runtime resource.",
+                "model-description" : {"grpc" : {
+                    "description" : "The gRPC subsystem",
+                    "access-constraints" : {"application" : {"deployment" : {"type" : "core"}}},
+                    "attributes" : {},
+                    "operations" : null,
+                    "notifications" : null,
+                    "children" : {"grpc-service" : {
+                        "description" : "gRPC service",
+                        "model-description" : {"*" : {
+                            "description" : "gRPC service",
+                            "access-constraints" : {"application" : {"deployment" : {"type" : "core"}}},
+                            "attributes" : {"service-class" : {
+                                "type" : {
+                                    "TYPE_MODEL_VALUE" : "STRING"
+                                },
+                                "description" : "Service class",
+                                "expressions-allowed" : false,
+                                "required" : true,
+                                "nillable" : false,
+                                "min-length" : 1,
+                                "max-length" : 2147483647,
+                                "access-type" : "read-only",
+                                "storage" : "runtime"
+                            }},
+                            "operations" : null,
+                            "notifications" : null,
+                            "children" : {}
+                        }}
+                    }}
+                }}
+            },
+            "subdeployment" : {
+                "description" : "Runtime resources associated with a child deployment packaged inside another deployment; for example a war packaged inside an ear.",
+                "model-description" : {"*" : {
+                    "description" : "A deployment represents anything that can be deployed (e.g. an application such as Jakarta Enterprise Beans-JAR, WAR, EAR, any kind of standard archive such as RAR or JBoss-specific deployment) into a server.",
+                    "access-constraints" : {"application" : {"deployment" : {"type" : "core"}}},
+                    "attributes" : {},
+                    "operations" : null,
+                    "notifications" : null,
+                    "children" : {"subsystem" : {
+                        "description" : "Runtime resources created when the deployment is deployed, organized by the subsystem responsible for the runtime resource.",
+                        "model-description" : {"grpc" : {
+                            "description" : "The gRPC subsystem",
+                            "access-constraints" : {"application" : {"deployment" : {"type" : "core"}}},
+                            "attributes" : {},
+                            "operations" : null,
+                            "notifications" : null,
+                            "children" : {"grpc-service" : {
+                                "description" : "gRPC service",
+                                "model-description" : {"*" : {
+                                    "description" : "gRPC service",
+                                    "access-constraints" : {"application" : {"deployment" : {"type" : "core"}}},
+                                    "attributes" : {"service-class" : {
+                                        "type" : {
+                                            "TYPE_MODEL_VALUE" : "STRING"
+                                        },
+                                        "description" : "Service class",
+                                        "expressions-allowed" : false,
+                                        "required" : true,
+                                        "nillable" : false,
+                                        "min-length" : 1,
+                                        "max-length" : 2147483647,
+                                        "access-type" : "read-only",
+                                        "storage" : "runtime"
+                                    }},
+                                    "operations" : null,
+                                    "notifications" : null,
+                                    "children" : {}
+                                }}
+                            }}
+                        }}
+                    }}
+                }}
+            }
+        }
+    }
+}]}
