@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import io.quarkus.qute.Location;
 import io.quarkus.qute.Template;
 import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
@@ -13,15 +14,14 @@ import org.jboss.dmr.Property;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 
 @Dependent
 public class SiteGenerator {
 
     @Inject
-    Template resource;
-
-    @Inject
-    Template index;
+    @Location("resource.html")
+    Template resourceTemplate;
 
     void generate(String featurePackGAV, Path modelFile, Path outputDirectory) throws IOException {
         System.out.println("🔎 Generating Feature Pack Documentation");
@@ -33,54 +33,60 @@ public class SiteGenerator {
         try (InputStream in = Files.newInputStream(modelFile)) {
             ModelNode rootDescription = ModelNode.fromJSONStream(in);
 
-            generateIndex(outputDirectory, featurePackGAV, rootDescription);
+            generate(outputDirectory, featurePackGAV, rootDescription);
             //System.out.println(rootDescription.toJSONString(false).substring(0, 500));
             //System.out.println(rootDescription.keys());
-
-            if (rootDescription.has("children", "subsystem", "model-description")) {
-                for (Property prop : rootDescription.get("children", "subsystem", "model-description").asPropertyList()) {
-                    //System.out.println("subsystem = " + prop.getName());
-                    String subsystemName = prop.getName();
-                    String description = prop.getValue().get("description").asStringOrNull();
-
-                    String content = resource.data("name", subsystemName,
-                                    "description", description,
-                                    "address", "/subsystem=" + subsystemName)
-                            .render();
-                    writeToFile(content, outputDirectory, "subsystem", subsystemName, "index.html");
-                }
-            }
         }
 
         System.out.println("✏️ Site generated at " + outputDirectory);
     }
 
-    private static void writeToFile(String content, Path baseDir, String... subPaths) throws IOException {
-        Path resolvedPath = baseDir;
-        for (String subPath : subPaths) {
-            resolvedPath = resolvedPath.resolve(subPath);
-        }
-        Path parentDir = resolvedPath.getParent();
+    private static void writeToFile(String content, Path file) throws IOException {
+        System.out.println("writing to file " + file);
+        Path parentDir = file.getParent();
         if (parentDir != null && !Files.exists(parentDir)) {
             Files.createDirectories(parentDir);
         }
 
-        Files.writeString(resolvedPath, content, StandardCharsets.UTF_8);
+        Files.writeString(file, content, StandardCharsets.UTF_8);
     }
 
-    private void generateIndex(Path outputDirectory, String featurePackGAV, ModelNode rootDescription) throws IOException {
+    private void generate(Path outputDirectory, String featurePackGAV, ModelNode rootDescription, PathElement... path) throws IOException {
+        final Resource resource = Resource.fromModelNode(PathAddress.pathAddress(), rootDescription, Collections.emptyMap());
+        final String currentUrl = buildCurrentUrl(path);
+        System.out.println("currentUrl = " + currentUrl);
 
-        if (rootDescription.has("children", "subsystem", "model-description")) {
-
-        }
-        final String currentUrl = buildCurrentUrl();
-
-        String content = index.data("feature-pack", featurePackGAV)
+        String content = resourceTemplate.data("feature-pack", featurePackGAV)
                 .data("currentUrl", currentUrl)
-                .data("breadcrumbs", Breadcrumb.build(new PathElement[] {}))
-                .data("children", new ArrayList<>())
+                .data("resource", resource)
+                .data("breadcrumbs", Breadcrumb.build(new PathElement[]{}))
                 .render();
-        writeToFile(content, outputDirectory,  "index.html");
+        Path dir = outputDirectory.resolve(currentUrl).normalize();
+        writeToFile(content, dir.resolve("index.html"));
+
+        for (Child child : resource.children()) {
+            if (child.children().isEmpty()) {
+                PathElement[] newPath = addToPath(path, child.name(), "*");
+                ModelNode childModel = rootDescription.get("children").get(child.name());
+                if (childModel.hasDefined("model-description")) {
+                    ModelNode newModel = childModel.get("model-description").get("*");
+                    if (!newModel.hasDefined("operations")) {
+                        newModel.get("operations");
+                    }
+                    generate(outputDirectory, "", newModel, newPath);
+                }
+            } else {
+                for (Child registration : child.children()) {
+                    PathElement[] newPath = addToPath(path, child.name(), registration.name());
+
+                    ModelNode childModel = rootDescription.get("children").get(child.name());
+                    if (childModel.hasDefined("model-description") && childModel.get("model-description").hasDefined(registration.name())) {
+                        ModelNode newModel = childModel.get("model-description").get(registration.name());
+                        generate(outputDirectory, "", newModel, newPath);
+                    }
+                }
+            }
+        }
     }
 
     private static String buildCurrentUrl(final PathElement... path) {

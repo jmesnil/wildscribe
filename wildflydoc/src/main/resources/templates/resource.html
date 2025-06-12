@@ -2,10 +2,30 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>{address}</title>
+    <title>{feature-pack}</title>
 </head>
 <body>
-<h1>{name}</h1>
-<p>{description}</p>
+<p>{currentUrl}</p>
+<p>{breadcrumbs}</p>
+<p>Description: {resource.description}</p>
+<code>
+    {resource.toString()}
+</code>
+<h1>{feature-pack}</h1>
+{#if resource.children.size > 0}
+<h2>Children ({resource.children.size})</h2>
+{#for child in resource.children}
+<ul>
+    <li>
+        <a href="/{child.name}">{child.name}</a>
+        {#for c in child.children}
+        <ul>
+            <li><a href="{child.name}/{c.name}/index.html">{c.name}</a></li>
+        </ul>
+    </li>
+    {/for}
+</ul>
+{/for}
+{/if}
 </body>
 </html>
