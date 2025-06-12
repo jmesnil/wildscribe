@@ -1,9 +1,24 @@
 {#if attributes.size > 0}
 <h2>Attributes ({attributes.size})</h2>
-<dl>
+<ul>
 {#for attribute in attributes}
-    <dt><a href="#{attribute.name}">{attribute.name}</a></dt>
-    <dd>{attribute.description}</dd>
+    <li>
+        <a id="{attribute.name}" href="#{attribute.name}">{attribute.name}</a> - {attribute.description}
+        <div>
+            <table>
+                <tr>
+                    <td>Type</td>
+                    <td>{attribute.type}</td>
+                </tr>
+                {#if attribute.defaultValue}
+                <tr>
+                    <td>Default Value</td>
+                    <td>{attribute.defaultValue}</td>
+                </tr>
+                {/if}
+            </table>
+        </div>
+    </li>
 {/for}
-</dl>
+</ul>
 {/if}

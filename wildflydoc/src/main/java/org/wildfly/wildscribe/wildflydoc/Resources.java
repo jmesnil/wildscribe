@@ -16,6 +16,40 @@ record Capability(String name, boolean dynamic) {
 
 }
 
+record ResourceNode(String name, List<ResourceNode> children,
+                    List<String> attributes) implements Comparable<ResourceNode> {
+    public static ResourceNode fromModelNode(String indent, String name, final ModelNode model) {
+        System.out.println(indent + name);
+        ArrayList<String> attributes = new ArrayList<>();
+        if (model.hasDefined("attributes")) {
+            for (Property attribute : model.get("attributes").asPropertyList()) {
+                attributes.add(attribute.getName());
+            }
+        }
+        ArrayList<ResourceNode> children = new ArrayList<>();
+
+        Collections.sort(children);
+        if (model.hasDefined("children") && !model.get("children").keys().isEmpty()) {
+            for (Property child : model.get("children").asPropertyList()) {
+                children.add(ResourceNode.fromModelNode("  " + indent, child.getName(), child.getValue()));
+
+            }
+        } else {
+            if (model.hasDefined("model-description")) {
+                for (Property child : model.get("model-description").asPropertyList()) {
+                    children.add(ResourceNode.fromModelNode("  " + indent, child.getName(), child.getValue()));
+                }
+            }
+        }
+        return new ResourceNode(name, children, attributes);
+    }
+
+    @Override
+    public int compareTo(ResourceNode o) {
+        return name.compareTo(o.name);
+    }
+}
+
 record Resource(String description, String storage, List<Child> children, List<Attribute> attributes) {
     public static Resource fromModelNode(PathAddress pathAddress, final ModelNode node, Map<String, Capability> capabilities) {
         final List<Child> children = new ArrayList<>();
@@ -84,9 +118,10 @@ record Deprecated(boolean deprecated, String reason, String since) {
 }
 
 record Attribute(String name, String description, String type, boolean nillable, boolean expressionsAllowed,
-                 String defaultValue, String min, String max, String accessType, String storage, Deprecated deprecated,
+                 String defaultValue, String min, String max, String accessType, String storage,
+                 Deprecated deprecated,
                  String unit, String restartRequired, String capabilityReference, String stability,
-                 Collection<String> allowedValues) implements Comparable<Attribute>{
+                 Collection<String> allowedValues) implements Comparable<Attribute> {
     public static Attribute fromProperty(final Property property) {
         String name = property.getName();
         String description = property.getValue().get("description").asString();

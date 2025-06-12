@@ -23,6 +23,9 @@ public class SiteGenerator {
     @Location("resource.html")
     Template resourceTemplate;
 
+    @Inject
+    Template sidebar;
+
     void generate(String featurePackGAV, Path modelFile, Path outputDirectory) throws IOException {
         System.out.println("🔎 Generating Feature Pack Documentation");
         System.out.println("  - Feature Pack: " + featurePackGAV);
@@ -33,6 +36,7 @@ public class SiteGenerator {
         try (InputStream in = Files.newInputStream(modelFile)) {
             ModelNode rootDescription = ModelNode.fromJSONStream(in);
 
+            generateSidebar(outputDirectory, rootDescription);
             generate(outputDirectory, featurePackGAV, rootDescription);
             //System.out.println(rootDescription.toJSONString(false).substring(0, 500));
             //System.out.println(rootDescription.keys());
@@ -42,7 +46,6 @@ public class SiteGenerator {
     }
 
     private static void writeToFile(String content, Path file) throws IOException {
-        System.out.println("writing to file " + file);
         Path parentDir = file.getParent();
         if (parentDir != null && !Files.exists(parentDir)) {
             Files.createDirectories(parentDir);
@@ -51,11 +54,17 @@ public class SiteGenerator {
         Files.writeString(file, content, StandardCharsets.UTF_8);
     }
 
+    private void generateSidebar(Path outputDirectory, ModelNode rootDescription) throws IOException {
+        ResourceNode root = ResourceNode.fromModelNode("", "home", rootDescription);
+        String content = sidebar.data("resource", root)
+                .render();
+        writeToFile(content, outputDirectory.resolve("sidebar.html"));
+    }
+
     private void generate(Path outputDirectory, String featurePackGAV, ModelNode rootDescription, PathElement... path) throws IOException {
         final Resource resource = Resource.fromModelNode(PathAddress.pathAddress(), rootDescription, Collections.emptyMap());
         final String currentUrl = buildCurrentUrl(path);
         final String relativePathToContextRoot = createRelativePathToContextRoot(currentUrl);
-        System.out.println("currentUrl = " + currentUrl);
 
         String content = resourceTemplate.data("feature-pack", featurePackGAV)
                 .data("currentUrl", currentUrl)

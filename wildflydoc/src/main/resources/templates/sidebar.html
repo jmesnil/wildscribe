@@ -1,0 +1,11 @@
+<ul>
+    {#for attribute in resource.attributes}
+    <li>A {attribute}</li>
+    {/for}
+    {#for child in resource.children}
+    <li>
+        <b>R {child.name}</b>
+        {#include sidebar resource=child /}
+    </li>
+    {/for}
+</ul>
