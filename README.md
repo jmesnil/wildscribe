@@ -1,8 +1,8 @@
 Wildscribe Documentation Generator
 ==================================
 
-This project is a documentation generator for Wildfly/JBoss EAP. Basically takes the self describing management model
-and turns it into HTML. It consists of two parts, the model dumper and the site generator.
+This project is a documentation siteGenerator for Wildfly/JBoss EAP. Basically takes the self describing management model
+and turns it into HTML. It consists of two parts, the model dumper and the site siteGenerator.
 
 See models/README.md for details on dumping models.
 
@@ -12,4 +12,4 @@ Add any new model versions to models/standalone/versions.txt
 
 Then run (for example):
 
-$ java -Durl=https://wildscribe.github.io -jar site-generator/target/site-generator.jar models/standalone/ ../wildscribe.github.io/
+$ java -Durl=https://wildscribe.github.io -jar site-siteGenerator/target/site-siteGenerator.jar models/standalone/ ../wildscribe.github.io/

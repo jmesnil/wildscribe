@@ -28,13 +28,13 @@
         <relativePath/>
     </parent>
 
-    <groupId>org.jboss.wildscribe</groupId>
+    <groupId>org.wildfly.wildscribe</groupId>
     <artifactId>wildscribe-parent</artifactId>
     <version>3.1.1.Final-SNAPSHOT</version>
 
     <name>Wildscribe</name>
     <description>
-        Documentation generator for all Application servers based
+        Documentation siteGenerator for all Application servers based
         on Wildfly, including AS 7.x, Wildfly 8.x, JBoss EAP 6.x and JBoss EAP 7.x
     </description>
 
@@ -94,7 +94,7 @@
     </properties>
 
     <modules>
-        <module>site-generator</module>
+        <module>wildflydoc</module>
     </modules>
 
     <scm>
@@ -133,7 +133,7 @@
 
             <dependency>
                 <groupId>org.jboss.wildscribe</groupId>
-                <artifactId>site-generator</artifactId>
+                <artifactId>site-siteGenerator</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
