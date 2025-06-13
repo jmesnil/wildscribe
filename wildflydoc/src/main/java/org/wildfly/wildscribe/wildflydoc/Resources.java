@@ -19,7 +19,6 @@ record Capability(String name, boolean dynamic) {
 record ResourceNode(String name, List<ResourceNode> children,
                     List<String> attributes) implements Comparable<ResourceNode> {
     public static ResourceNode fromModelNode(String indent, String name, final ModelNode model) {
-        System.out.println(indent + name);
         ArrayList<String> attributes = new ArrayList<>();
         if (model.hasDefined("attributes")) {
             for (Property attribute : model.get("attributes").asPropertyList()) {
@@ -37,6 +36,9 @@ record ResourceNode(String name, List<ResourceNode> children,
         } else {
             if (model.hasDefined("model-description")) {
                 for (Property child : model.get("model-description").asPropertyList()) {
+                    if (child.getName().equals("*")) {
+                        return fromModelNode(indent, name, child.getValue());
+                    }
                     children.add(ResourceNode.fromModelNode("  " + indent, child.getName(), child.getValue()));
                 }
             }

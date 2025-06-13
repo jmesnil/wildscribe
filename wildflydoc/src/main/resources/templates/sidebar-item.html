@@ -1,0 +1,11 @@
+{#for attribute in resource.attributes}
+<li>&#9424; {attribute}</li>
+{/for}
+{#for child in resource.children}
+<li>
+    <b class="toggle expanded">&#9441; {child.name}</b>
+    <ul class="nested">
+        {#include sidebar-item resource=child /}
+    </ul>
+</li>
+{/for}

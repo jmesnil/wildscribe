@@ -1,11 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        ul {
+            list-style-type: none;
+        }
+        .nested {
+            display: none;
+        }
+        .toggle {
+            cursor: pointer;
+        }
+        .toggle::before {
+            content: "\25BD";
+            display: inline-block;
+            margin-right: 5px;
+        }
+        .toggle.expanded::before {
+            content: "\25B7";
+        }
+    </style>
+</head>
+<body>
 <ul>
-    {#for attribute in resource.attributes}
-    <li>A {attribute}</li>
-    {/for}
-    {#for child in resource.children}
-    <li>
-        <b>R {child.name}</b>
-        {#include sidebar resource=child /}
+    <li><b class="toggle"> Home /</b>
+        <ul>
+            {#include sidebar-item /}
+        </ul>
     </li>
-    {/for}
 </ul>
+<script>
+    document.querySelectorAll('.toggle').forEach(toggler => {
+        toggler.addEventListener('click', function () {
+            const nextUl = this.nextElementSibling;
+            if (nextUl && nextUl.tagName === 'UL') {
+                nextUl.classList.toggle('nested');
+                this.classList.toggle('expanded');
+            }
+        });
+    });
+</script>
+</body>
+</html>
