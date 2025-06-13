@@ -1,7 +1,7 @@
 {#if children.size > 0}
 <h2>Children ({children.size})</h2>
+<ul class="children">
 {#for child in children}
-<ul>
     <li>
         {#if child.children.size == 0}
         <a href="{child.name}/index.html">{child.name}</a>
@@ -14,6 +14,6 @@
         </ul>
     </li>
     {/for}
-</ul>
 {/for}
+</ul>
 {/if}

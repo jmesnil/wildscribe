@@ -12,10 +12,8 @@ import io.quarkus.qute.Template;
 import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
 import org.jboss.dmr.ModelNode;
-import org.jboss.dmr.Property;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Collections;
 
 @Dependent
@@ -41,9 +39,9 @@ public class SiteGenerator {
         try (InputStream in = Files.newInputStream(modelFile)) {
             ModelNode rootDescription = ModelNode.fromJSONStream(in);
 
-            generateSidebar(outputDirectory, rootDescription);
-            generate(outputDirectory, featurePackGAV, rootDescription, "root.html");
-            generateIndex(outputDirectory, rootDescription);
+            //generateSidebar(outputDirectory, rootDescription);
+            generate(outputDirectory, featurePackGAV, rootDescription);
+            //generateIndex(outputDirectory, rootDescription);
         }
 
         System.out.println("✏️ Site generated at " + outputDirectory);
@@ -77,7 +75,7 @@ public class SiteGenerator {
                 .render();
         writeToFile(content, outputDirectory.resolve("index.html"));
     }
-    private void generate(Path outputDirectory, String featurePackGAV, ModelNode rootDescription, String file, PathElement... path) throws IOException {
+    private void generate(Path outputDirectory, String featurePackGAV, ModelNode rootDescription, PathElement... path) throws IOException {
         final Resource resource = Resource.fromModelNode(PathAddress.pathAddress(), rootDescription, Collections.emptyMap());
         final String currentUrl = buildCurrentUrl(path);
         final String relativePathToContextRoot = createRelativePathToContextRoot(currentUrl);
@@ -89,7 +87,7 @@ public class SiteGenerator {
                 .data("relativePathToContextRoot", relativePathToContextRoot)
                 .render();
         Path dir = outputDirectory.resolve(currentUrl).normalize();
-        writeToFile(content, dir.resolve(file));
+        writeToFile(content, dir.resolve("index.html"));
 
         for (Child child : resource.children()) {
             if (child.children().isEmpty()) {
@@ -100,7 +98,7 @@ public class SiteGenerator {
                     if (!newModel.hasDefined("operations")) {
                         newModel.get("operations");
                     }
-                    generate(outputDirectory, "", newModel,"index.html", newPath);
+                    generate(outputDirectory, "", newModel, newPath);
                 }
             } else {
                 for (Child registration : child.children()) {
@@ -109,7 +107,7 @@ public class SiteGenerator {
                     ModelNode childModel = rootDescription.get("children").get(child.name());
                     if (childModel.hasDefined("model-description") && childModel.get("model-description").hasDefined(registration.name())) {
                         ModelNode newModel = childModel.get("model-description").get(registration.name());
-                        generate(outputDirectory, "", newModel, "index.html", newPath);
+                        generate(outputDirectory, "", newModel, newPath);
                     }
                 }
             }

@@ -3,7 +3,7 @@
 {/for}
 {#for child in resource.children}
 <li>
-    <b class="toggle expanded">&#9441; <a href="/{child.url}">{child.name}</a></b>
+    <b class="toggle expanded"><a href="/{child.url}">{child.name}</a></b>
     <ul class="nested">
         {#include sidebar-item resource=child /}
     </ul>
