@@ -3,6 +3,7 @@ package org.wildfly.wildscribe.wildflydoc;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.sort;
 
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -17,9 +18,14 @@ record Capability(String name, boolean dynamic) {
 
 }
 
-record ResourceNode(String name, String description, List<ResourceNode> children,
-                    List<Attribute> attributes) implements Comparable<ResourceNode> {
-    public static ResourceNode fromModelNode(String indent, String name, final ModelNode model) {
+record ResourceNode(String name,
+                    String url,
+                    PathAddress address,
+                    String description,
+                    List<ResourceNode> children,
+                    List<Attribute> attributes,
+                    ModelNode model) implements Comparable<ResourceNode> {
+    public static ResourceNode fromModelNode(String indent, String url, String name, PathAddress address, final ModelNode model) {
         String description = model.get("description").asStringOrNull();
 
         List<Attribute> attributes = new ArrayList<>();
@@ -33,22 +39,26 @@ record ResourceNode(String name, String description, List<ResourceNode> children
         List<ResourceNode> children = new ArrayList<>();
         if (model.hasDefined("children") && !model.get("children").keys().isEmpty()) {
             for (Property child : model.get("children").asPropertyList()) {
-                children.add(ResourceNode.fromModelNode("  " + indent, child.getName(), child.getValue()));
+                PathAddress childAddress = address.append(PathElement.pathElement(child.getName()));
+                String childUrl = SiteGenerator.buildCurrentUrl(childAddress);
+                children.add(ResourceNode.fromModelNode("  " + indent, childUrl, child.getName(), childAddress, child.getValue()));
 
             }
         } else {
             if (model.hasDefined("model-description")) {
                 for (Property child : model.get("model-description").asPropertyList()) {
                     if (child.getName().equals("*")) {
-                        return fromModelNode(indent, name, child.getValue());
+                        return fromModelNode(indent, url, name, address, child.getValue());
                     }
-                    children.add(ResourceNode.fromModelNode("  " + indent, child.getName(), child.getValue()));
+                    PathAddress childAddress = address.append(PathElement.pathElement(child.getName()));
+                    String childUrl = SiteGenerator.buildCurrentUrl(childAddress);
+                    children.add(ResourceNode.fromModelNode("  " + indent, childUrl, child.getName(), childAddress, child.getValue()));
                 }
             }
         }
         sort(children);
 
-        return new ResourceNode(name, description, children, attributes);
+        return new ResourceNode(name, url, address, description, children, attributes, model);
     }
 
     @Override

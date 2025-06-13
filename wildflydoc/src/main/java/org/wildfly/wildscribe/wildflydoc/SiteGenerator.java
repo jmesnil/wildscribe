@@ -1,5 +1,7 @@
 package org.wildfly.wildscribe.wildflydoc;
 
+import static org.wildfly.wildscribe.wildflydoc.PathAddress.EMPTY_ADDRESS;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -40,10 +42,8 @@ public class SiteGenerator {
             ModelNode rootDescription = ModelNode.fromJSONStream(in);
 
             generateSidebar(outputDirectory, rootDescription);
+            generate(outputDirectory, featurePackGAV, rootDescription, "root.html");
             generateIndex(outputDirectory, rootDescription);
-            generate(outputDirectory, featurePackGAV, rootDescription);
-            //System.out.println(rootDescription.toJSONString(false).substring(0, 500));
-            //System.out.println(rootDescription.keys());
         }
 
         System.out.println("✏️ Site generated at " + outputDirectory);
@@ -59,25 +59,25 @@ public class SiteGenerator {
     }
 
     private void generateSidebar(Path outputDirectory, ModelNode rootDescription) throws IOException {
-        ResourceNode root = ResourceNode.fromModelNode("", "home", rootDescription);
+        final String currentUrl = buildCurrentUrl();
+        ResourceNode root = ResourceNode.fromModelNode("", currentUrl, "home", EMPTY_ADDRESS, rootDescription);
         String content = sidebar.data("resource", root)
                 .render();
         writeToFile(content, outputDirectory.resolve("sidebar.html"));
     }
 
     private void generateIndex(Path outputDirectory, ModelNode rootDescription) throws IOException {
-        ResourceNode root = ResourceNode.fromModelNode("", "home", rootDescription);
         final String currentUrl = buildCurrentUrl();
+        ResourceNode root = ResourceNode.fromModelNode("", currentUrl, "home", EMPTY_ADDRESS, rootDescription);
         final String relativePathToContextRoot = createRelativePathToContextRoot(currentUrl);
         String content = index.data("resource", root)
                 .data("currentUrl", currentUrl)
                 .data("resource", root)
                 .data("breadcrumbs", Breadcrumb.build())
-                .data("relativePathToContextRoot", relativePathToContextRoot)
                 .render();
         writeToFile(content, outputDirectory.resolve("index.html"));
     }
-    private void generate(Path outputDirectory, String featurePackGAV, ModelNode rootDescription, PathElement... path) throws IOException {
+    private void generate(Path outputDirectory, String featurePackGAV, ModelNode rootDescription, String file, PathElement... path) throws IOException {
         final Resource resource = Resource.fromModelNode(PathAddress.pathAddress(), rootDescription, Collections.emptyMap());
         final String currentUrl = buildCurrentUrl(path);
         final String relativePathToContextRoot = createRelativePathToContextRoot(currentUrl);
@@ -89,7 +89,7 @@ public class SiteGenerator {
                 .data("relativePathToContextRoot", relativePathToContextRoot)
                 .render();
         Path dir = outputDirectory.resolve(currentUrl).normalize();
-        writeToFile(content, dir.resolve("root.html"));
+        writeToFile(content, dir.resolve(file));
 
         for (Child child : resource.children()) {
             if (child.children().isEmpty()) {
@@ -100,7 +100,7 @@ public class SiteGenerator {
                     if (!newModel.hasDefined("operations")) {
                         newModel.get("operations");
                     }
-                    generate(outputDirectory, "", newModel, newPath);
+                    generate(outputDirectory, "", newModel,"index.html", newPath);
                 }
             } else {
                 for (Child registration : child.children()) {
@@ -109,16 +109,31 @@ public class SiteGenerator {
                     ModelNode childModel = rootDescription.get("children").get(child.name());
                     if (childModel.hasDefined("model-description") && childModel.get("model-description").hasDefined(registration.name())) {
                         ModelNode newModel = childModel.get("model-description").get(registration.name());
-                        generate(outputDirectory, "", newModel, newPath);
+                        generate(outputDirectory, "", newModel, "index.html", newPath);
                     }
                 }
             }
         }
     }
 
-    private static String buildCurrentUrl(final PathElement... path) {
+    static String buildCurrentUrl(final PathElement... path) {
         StringBuilder sb = new StringBuilder();
         for (PathElement i : path) {
+            if (!sb.toString().isEmpty()) {
+                sb.append('/');
+            }
+            sb.append(i.getKey());
+            if (!i.isWildcard()) {
+                sb.append('/');
+                sb.append(i.getValue());
+            }
+        }
+        return sb.toString();
+    }
+
+    static String buildCurrentUrl(final PathAddress address) {
+        StringBuilder sb = new StringBuilder();
+        for (PathElement i : address) {
             if (!sb.toString().isEmpty()) {
                 sb.append('/');
             }

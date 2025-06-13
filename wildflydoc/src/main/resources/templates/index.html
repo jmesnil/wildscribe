@@ -14,7 +14,6 @@
 
         .sidebar a {
           text-decoration: none;
-          display: block;
           margin: 1rem 0;
         }
 
@@ -50,14 +49,14 @@
 <body>
 <div class="sidebar">
     <ul>
-        <li><b class="toggle"> Home /</b>
+        <li><b class="toggle"><a href="/root.html">root /</a></b>
             <ul>
                 {#include sidebar-item /}
             </ul>
         </li>
     </ul>
 </div>
-<div class="content">
+<div id="main-content" class="content">
     {#include resource-item /}
 </div>
 <script>
@@ -70,6 +69,34 @@
             }
         });
     });
+
+    const contentEl = document.getElementById("main-content");
+    function loadPage(url, push = true) {
+      fetch(url)
+        .then(response => {
+          if (!response.ok) throw new Error("Page not found");
+          return response.text();
+        })
+        .then(html => {
+          contentEl.innerHTML = html;
+          if (push) {
+            history.pushState({ url }, "", url);
+          }
+        })
+        .catch(() => {
+          contentEl.innerHTML = "<h1>404</h1><p>Page not found.</p>";
+        });
+    }
+
+    document.querySelectorAll(".sidebar a").forEach(link => {
+      link.addEventListener("click", (e) => {
+        e.preventDefault();
+        const url = e.target.getAttribute("href");
+        loadPage(url);
+      });
+    });
+
+    loadPage("root.html", true);
 </script>
 </body>
 </html>
