@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 record Breadcrumb(String label, String url) {
-    static List<Breadcrumb> build(PathElement[] path) {
+    static List<Breadcrumb> build(PathElement... path) {
         final List<Breadcrumb> crumbs = new ArrayList<>();
         crumbs.add(new Breadcrumb("home", "index.html"));
         StringBuilder currentUrl = new StringBuilder();

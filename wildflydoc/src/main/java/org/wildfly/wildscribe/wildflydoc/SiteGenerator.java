@@ -26,6 +26,9 @@ public class SiteGenerator {
     @Inject
     Template sidebar;
 
+    @Inject
+    Template index;
+
     void generate(String featurePackGAV, Path modelFile, Path outputDirectory) throws IOException {
         System.out.println("🔎 Generating Feature Pack Documentation");
         System.out.println("  - Feature Pack: " + featurePackGAV);
@@ -37,6 +40,7 @@ public class SiteGenerator {
             ModelNode rootDescription = ModelNode.fromJSONStream(in);
 
             generateSidebar(outputDirectory, rootDescription);
+            generateIndex(outputDirectory, rootDescription);
             generate(outputDirectory, featurePackGAV, rootDescription);
             //System.out.println(rootDescription.toJSONString(false).substring(0, 500));
             //System.out.println(rootDescription.keys());
@@ -61,6 +65,18 @@ public class SiteGenerator {
         writeToFile(content, outputDirectory.resolve("sidebar.html"));
     }
 
+    private void generateIndex(Path outputDirectory, ModelNode rootDescription) throws IOException {
+        ResourceNode root = ResourceNode.fromModelNode("", "home", rootDescription);
+        final String currentUrl = buildCurrentUrl();
+        final String relativePathToContextRoot = createRelativePathToContextRoot(currentUrl);
+        String content = index.data("resource", root)
+                .data("currentUrl", currentUrl)
+                .data("resource", root)
+                .data("breadcrumbs", Breadcrumb.build())
+                .data("relativePathToContextRoot", relativePathToContextRoot)
+                .render();
+        writeToFile(content, outputDirectory.resolve("index.html"));
+    }
     private void generate(Path outputDirectory, String featurePackGAV, ModelNode rootDescription, PathElement... path) throws IOException {
         final Resource resource = Resource.fromModelNode(PathAddress.pathAddress(), rootDescription, Collections.emptyMap());
         final String currentUrl = buildCurrentUrl(path);
@@ -73,7 +89,7 @@ public class SiteGenerator {
                 .data("relativePathToContextRoot", relativePathToContextRoot)
                 .render();
         Path dir = outputDirectory.resolve(currentUrl).normalize();
-        writeToFile(content, dir.resolve("index.html"));
+        writeToFile(content, dir.resolve("root.html"));
 
         for (Child child : resource.children()) {
             if (child.children().isEmpty()) {

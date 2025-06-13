@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+          margin: 0;
+          display: flex;
+        }
+
+        .sidebar {
+          padding: 1rem;
+          box-sizing: border-box;
+        }
+
+        .sidebar a {
+          text-decoration: none;
+          display: block;
+          margin: 1rem 0;
+        }
+
+        .sidebar a:hover {
+          text-decoration: underline;
+        }
+
+        .content {
+          flex: 1;
+          padding: 2rem;
+          box-sizing: border-box;
+        }
+
+            ul {
+                list-style-type: none;
+            }
+            .nested {
+                display: none;
+            }
+            .toggle {
+                cursor: pointer;
+            }
+            .toggle::before {
+                content: "\25BD";
+                display: inline-block;
+                margin-right: 5px;
+            }
+            .toggle.expanded::before {
+                content: "\25B7";
+            }
+    </style>
+</head>
+<body>
+<div class="sidebar">
+    <ul>
+        <li><b class="toggle"> Home /</b>
+            <ul>
+                {#include sidebar-item /}
+            </ul>
+        </li>
+    </ul>
+</div>
+<div class="content">
+    {#include resource-item /}
+</div>
+<script>
+    document.querySelectorAll('.toggle').forEach(toggler => {
+        toggler.addEventListener('click', function () {
+            const nextUl = this.nextElementSibling;
+            if (nextUl && nextUl.tagName === 'UL') {
+                nextUl.classList.toggle('nested');
+                this.classList.toggle('expanded');
+            }
+        });
+    });
+</script>
+</body>
+</html>

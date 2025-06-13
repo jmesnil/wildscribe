@@ -1,6 +1,7 @@
 package org.wildfly.wildscribe.wildflydoc;
 
 import static java.util.Collections.emptyList;
+import static java.util.Collections.sort;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -16,18 +17,20 @@ record Capability(String name, boolean dynamic) {
 
 }
 
-record ResourceNode(String name, List<ResourceNode> children,
-                    List<String> attributes) implements Comparable<ResourceNode> {
+record ResourceNode(String name, String description, List<ResourceNode> children,
+                    List<Attribute> attributes) implements Comparable<ResourceNode> {
     public static ResourceNode fromModelNode(String indent, String name, final ModelNode model) {
-        ArrayList<String> attributes = new ArrayList<>();
+        String description = model.get("description").asStringOrNull();
+
+        List<Attribute> attributes = new ArrayList<>();
         if (model.hasDefined("attributes")) {
             for (Property attribute : model.get("attributes").asPropertyList()) {
-                attributes.add(attribute.getName());
+                attributes.add(Attribute.fromProperty(attribute));
             }
         }
-        ArrayList<ResourceNode> children = new ArrayList<>();
+        sort(attributes);
 
-        Collections.sort(children);
+        List<ResourceNode> children = new ArrayList<>();
         if (model.hasDefined("children") && !model.get("children").keys().isEmpty()) {
             for (Property child : model.get("children").asPropertyList()) {
                 children.add(ResourceNode.fromModelNode("  " + indent, child.getName(), child.getValue()));
@@ -43,7 +46,9 @@ record ResourceNode(String name, List<ResourceNode> children,
                 }
             }
         }
-        return new ResourceNode(name, children, attributes);
+        sort(children);
+
+        return new ResourceNode(name, description, children, attributes);
     }
 
     @Override
@@ -59,14 +64,14 @@ record Resource(String description, String storage, List<Child> children, List<A
             for (Property property : node.get("children").asPropertyList()) {
                 children.add(Child.fromProperty(property));
             }
-            Collections.sort(children);
+            sort(children);
         }
         final List<Attribute> attributes = new ArrayList<Attribute>();
         if (node.hasDefined("attributes")) {
             for (Property i : node.get("attributes").asPropertyList()) {
                 attributes.add(Attribute.fromProperty(i));
             }
-            Collections.sort(attributes);
+            sort(attributes);
         }
         String storage = node.get("storage").asString("configuration");
 
@@ -89,7 +94,7 @@ record Child(String name, String description, Deprecated deprecated,
                 }
             }
         }
-        Collections.sort(registrations);
+        sort(registrations);
 
         Child op = new Child(name, description, Deprecated.fromModel(property.getValue()), registrations);
 
