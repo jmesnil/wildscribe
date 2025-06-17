@@ -30,6 +30,9 @@ public class WildFlyDoc implements Runnable, QuarkusApplication {
     @CommandLine.Option(names = {"-o", "--output"}, required = true, description = "Output directory")
     Path outputDirectory;
 
+    @CommandLine.Option(names = {"-s", "--source"}, required = true, description = "Project Source Location")
+    String projectSourceLocation;
+
     private final SiteGenerator siteGenerator;
 
     public WildFlyDoc(SiteGenerator siteGenerator) {
@@ -39,7 +42,7 @@ public class WildFlyDoc implements Runnable, QuarkusApplication {
     @Override
     public void run() {
         try {
-            siteGenerator.generate(featurePackGav, modelFile, outputDirectory);
+            siteGenerator.generate(featurePackGav, modelFile, outputDirectory, projectSourceLocation);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

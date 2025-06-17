@@ -142,3 +142,19 @@ record Attribute(String name, String description, String type, boolean nillable,
         return name.compareTo(o.name);
     }
 }
+
+record GAV(String groupId, String artifactId, String version) {
+    static GAV parse(String gav) {
+        String[] parts = gav.split(":");
+        if (parts.length != 3) {
+            throw new IllegalArgumentException("Invalid GAV format. Expected format: groupId:artifactId:version");
+        }
+        return new GAV(parts[0], parts[1], parts[2]);
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s:%s:%s", groupId, artifactId, version);
+    }
+}
+

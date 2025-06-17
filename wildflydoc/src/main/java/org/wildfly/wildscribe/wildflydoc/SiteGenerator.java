@@ -24,24 +24,39 @@ public class SiteGenerator {
     @Location("resource.html")
     Template resourceTemplate;
 
-    void generate(String featurePackGAV, Path modelFile, Path outputDirectory) throws IOException {
+    @Inject
+    Template index;
+
+    void generate(String featurePackGAV, Path modelFile, Path outputDirectory, String projectSourceLocation) throws IOException {
         System.out.println("🔎 Generating Feature Pack Documentation");
         System.out.println("  - Feature Pack: " + featurePackGAV);
         System.out.println("  - Model: " + modelFile);
 
         Files.createDirectories(outputDirectory);
 
+        GAV gav = GAV.parse(featurePackGAV);
+
         Path docPath = outputDirectory.resolve("doc");
+        Path referencePath = docPath.resolve("reference");
+        Files.createDirectories(referencePath);
 
         try (InputStream in = Files.newInputStream(modelFile)) {
             ModelNode rootDescription = ModelNode.fromJSONStream(in);
 
-            generateResource(docPath, featurePackGAV, rootDescription);
+            generateIndex(docPath, gav, projectSourceLocation);
+            generateResource(referencePath, rootDescription);
         }
 
         System.out.println("✏️ Site generated at " + docPath);
 
-        zipDirectory(outputDirectory, featurePackGAV , docPath);
+        zipDirectory(outputDirectory, gav , docPath);
+    }
+
+    private void generateIndex(Path docPath, GAV gav, String projectSourceLocation) throws IOException {
+        String content = index
+                .data("gav", gav)
+                .data("projectSourceLocation", projectSourceLocation).render();
+        Files.writeString(docPath.resolve("index.html"), content, StandardCharsets.UTF_8);
     }
 
     private static void writeToFile(String content, Path file) throws IOException {
@@ -53,9 +68,10 @@ public class SiteGenerator {
         Files.writeString(file, content, StandardCharsets.UTF_8);
     }
 
-    public static void zipDirectory(Path outputDirectory, String name, Path sourceDirPath) throws IOException {
+    public static void zipDirectory(Path outputDirectory, GAV gav, Path sourceDirPath) throws IOException {
 
-        Path zipPath = outputDirectory.resolve(name + "-doc.zip");
+        Path zipPath = outputDirectory.resolve(String.format("%s-%s-doc.zip",
+                gav.artifactId(), gav.version()));
         try (
                 ZipOutputStream zs = new ZipOutputStream(Files.newOutputStream(zipPath));
                 Stream<Path> stream = Files.walk(sourceDirPath)) {
@@ -83,14 +99,14 @@ public class SiteGenerator {
         System.out.println("📁 Archive generated at " + zipPath);
     }
 
-    private void generateResource(Path outputDirectory, String featurePackGAV, ModelNode
+    private void generateResource(Path outputDirectory, ModelNode
             rootDescription, PathElement... path) throws IOException {
         PathAddress address = PathAddress.pathAddress(path);
         final Resource resource = Resource.fromModelNode(address, rootDescription, Collections.emptyMap());
         final String currentUrl = buildCurrentUrl(path);
         final String relativePathToContextRoot = createRelativePathToContextRoot(currentUrl);
 
-        String content = resourceTemplate.data("feature-pack", featurePackGAV)
+        String content = resourceTemplate
                 .data("currentUrl", currentUrl)
                 .data("resource", resource)
                 .data("breadcrumbs", Breadcrumb.build(path))
@@ -108,7 +124,7 @@ public class SiteGenerator {
                     if (newModel.hasDefined("operations")) {
                         newModel.get("operations");
                     }
-                    generateResource(outputDirectory, "", newModel, newPath);
+                    generateResource(outputDirectory, newModel, newPath);
                 }
             } else {
                 for (Child registration : child.children()) {
@@ -117,7 +133,7 @@ public class SiteGenerator {
                     ModelNode childModel = rootDescription.get("children").get(child.name());
                     if (childModel.hasDefined("model-description") && childModel.get("model-description").hasDefined(registration.name())) {
                         ModelNode newModel = childModel.get("model-description").get(registration.name());
-                        generateResource(outputDirectory, "", newModel, newPath);
+                        generateResource(outputDirectory, newModel, newPath);
                     }
                 }
             }
