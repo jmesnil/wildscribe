@@ -1,24 +1,21 @@
 package org.wildfly.wildscribe.wildflydoc;
 
-import static org.wildfly.wildscribe.wildflydoc.PathAddress.EMPTY_ADDRESS;
-
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.stream.Stream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import io.quarkus.qute.Location;
 import io.quarkus.qute.Template;
 import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
 import org.jboss.dmr.ModelNode;
-
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Paths;
-import java.util.Collections;
-import java.util.stream.Stream;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
 @Dependent
 public class SiteGenerator {
@@ -57,20 +54,29 @@ public class SiteGenerator {
     }
 
     public static void zipDirectory(Path outputDirectory, String name, Path sourceDirPath) throws IOException {
+
         Path zipPath = outputDirectory.resolve(name + "-doc.zip");
         try (
                 ZipOutputStream zs = new ZipOutputStream(Files.newOutputStream(zipPath));
                 Stream<Path> stream = Files.walk(sourceDirPath)) {
-            stream.filter(path -> !Files.isDirectory(path))
+            Path basePath = sourceDirPath.getParent(); // Ensures the root folder is included
+            stream
                     .forEach(path -> {
-                        ZipEntry zipEntry = new ZipEntry(sourceDirPath.relativize(path).toString().replace("\\", "/"));
                         try {
-                            zs.putNextEntry(zipEntry);
-                            Files.copy(path, zs);
-                            zs.closeEntry();
+                            String zipEntryName = basePath.relativize(path).toString().replace("\\", "/");
+                            if (Files.isDirectory(path)) {
+                                if (!zipEntryName.endsWith("/")) {
+                                    zipEntryName += "/";
+                                }
+                                zs.putNextEntry(new ZipEntry(zipEntryName));
+                                zs.closeEntry();
+                            } else {
+                                zs.putNextEntry(new ZipEntry(zipEntryName));
+                                Files.copy(path, zs);
+                                zs.closeEntry();
+                            }
                         } catch (IOException e) {
-                            System.err.println("Failed to add file to zip: " + path);
-                            e.printStackTrace();
+                            throw new UncheckedIOException(e);
                         }
                     });
         }
