@@ -23,12 +23,6 @@ public class SiteGenerator {
     @Location("resource.html")
     Template resourceTemplate;
 
-    @Inject
-    Template sidebar;
-
-    @Inject
-    Template index;
-
     void generate(String featurePackGAV, Path modelFile, Path outputDirectory) throws IOException {
         System.out.println("🔎 Generating Feature Pack Documentation");
         System.out.println("  - Feature Pack: " + featurePackGAV);
@@ -39,9 +33,7 @@ public class SiteGenerator {
         try (InputStream in = Files.newInputStream(modelFile)) {
             ModelNode rootDescription = ModelNode.fromJSONStream(in);
 
-            //generateSidebar(outputDirectory, rootDescription);
-            generate(outputDirectory, featurePackGAV, rootDescription);
-            //generateIndex(outputDirectory, rootDescription);
+            generateResource(outputDirectory, featurePackGAV, rootDescription);
         }
 
         System.out.println("✏️ Site generated at " + outputDirectory);
@@ -56,27 +48,9 @@ public class SiteGenerator {
         Files.writeString(file, content, StandardCharsets.UTF_8);
     }
 
-    private void generateSidebar(Path outputDirectory, ModelNode rootDescription) throws IOException {
-        final String currentUrl = buildCurrentUrl();
-        ResourceNode root = ResourceNode.fromModelNode("", currentUrl, "home", EMPTY_ADDRESS, rootDescription);
-        String content = sidebar.data("resource", root)
-                .render();
-        writeToFile(content, outputDirectory.resolve("sidebar.html"));
-    }
-
-    private void generateIndex(Path outputDirectory, ModelNode rootDescription) throws IOException {
-        final String currentUrl = buildCurrentUrl();
-        ResourceNode root = ResourceNode.fromModelNode("", currentUrl, "home", EMPTY_ADDRESS, rootDescription);
-        final String relativePathToContextRoot = createRelativePathToContextRoot(currentUrl);
-        String content = index.data("resource", root)
-                .data("currentUrl", currentUrl)
-                .data("resource", root)
-                .data("breadcrumbs", Breadcrumb.build())
-                .render();
-        writeToFile(content, outputDirectory.resolve("index.html"));
-    }
-    private void generate(Path outputDirectory, String featurePackGAV, ModelNode rootDescription, PathElement... path) throws IOException {
-        final Resource resource = Resource.fromModelNode(PathAddress.pathAddress(), rootDescription, Collections.emptyMap());
+    private void generateResource(Path outputDirectory, String featurePackGAV, ModelNode rootDescription, PathElement... path) throws IOException {
+        PathAddress address = PathAddress.pathAddress(path);
+        final Resource resource = Resource.fromModelNode(address, rootDescription, Collections.emptyMap());
         final String currentUrl = buildCurrentUrl(path);
         final String relativePathToContextRoot = createRelativePathToContextRoot(currentUrl);
 
@@ -95,10 +69,10 @@ public class SiteGenerator {
                 ModelNode childModel = rootDescription.get("children").get(child.name());
                 if (childModel.hasDefined("model-description")) {
                     ModelNode newModel = childModel.get("model-description").get("*");
-                    if (!newModel.hasDefined("operations")) {
+                    if (newModel.hasDefined("operations")) {
                         newModel.get("operations");
                     }
-                    generate(outputDirectory, "", newModel, newPath);
+                    generateResource(outputDirectory, "", newModel, newPath);
                 }
             } else {
                 for (Child registration : child.children()) {
@@ -107,12 +81,13 @@ public class SiteGenerator {
                     ModelNode childModel = rootDescription.get("children").get(child.name());
                     if (childModel.hasDefined("model-description") && childModel.get("model-description").hasDefined(registration.name())) {
                         ModelNode newModel = childModel.get("model-description").get(registration.name());
-                        generate(outputDirectory, "", newModel, newPath);
+                        generateResource(outputDirectory, "", newModel, newPath);
                     }
                 }
             }
         }
     }
+
 
     static String buildCurrentUrl(final PathElement... path) {
         StringBuilder sb = new StringBuilder();

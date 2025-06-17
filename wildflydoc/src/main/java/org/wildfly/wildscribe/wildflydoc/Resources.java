@@ -3,9 +3,7 @@ package org.wildfly.wildscribe.wildflydoc;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.sort;
 
-import java.nio.file.Path;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
@@ -16,55 +14,6 @@ import org.jboss.dmr.Property;
 
 record Capability(String name, boolean dynamic) {
 
-}
-
-record ResourceNode(String name,
-                    String url,
-                    PathAddress address,
-                    String description,
-                    List<ResourceNode> children,
-                    List<Attribute> attributes,
-                    ModelNode model) implements Comparable<ResourceNode> {
-    public static ResourceNode fromModelNode(String indent, String url, String name, PathAddress address, final ModelNode model) {
-        String description = model.get("description").asStringOrNull();
-
-        List<Attribute> attributes = new ArrayList<>();
-        if (model.hasDefined("attributes")) {
-            for (Property attribute : model.get("attributes").asPropertyList()) {
-                attributes.add(Attribute.fromProperty(attribute));
-            }
-        }
-        sort(attributes);
-
-        List<ResourceNode> children = new ArrayList<>();
-        if (model.hasDefined("children") && !model.get("children").keys().isEmpty()) {
-            for (Property child : model.get("children").asPropertyList()) {
-                PathAddress childAddress = address.append(PathElement.pathElement(child.getName()));
-                String childUrl = SiteGenerator.buildCurrentUrl(childAddress);
-                children.add(ResourceNode.fromModelNode("  " + indent, childUrl, child.getName(), childAddress, child.getValue()));
-
-            }
-        } else {
-            if (model.hasDefined("model-description")) {
-                for (Property child : model.get("model-description").asPropertyList()) {
-                    if (child.getName().equals("*")) {
-                        return fromModelNode(indent, url, name, address, child.getValue());
-                    }
-                    PathAddress childAddress = address.append(PathElement.pathElement(child.getName()));
-                    String childUrl = SiteGenerator.buildCurrentUrl(childAddress);
-                    children.add(ResourceNode.fromModelNode("  " + indent, childUrl, child.getName(), childAddress, child.getValue()));
-                }
-            }
-        }
-        sort(children);
-
-        return new ResourceNode(name, url, address, description, children, attributes, model);
-    }
-
-    @Override
-    public int compareTo(ResourceNode o) {
-        return name.compareTo(o.name);
-    }
 }
 
 record Resource(String description, String storage, List<Child> children, List<Attribute> attributes) {
@@ -83,9 +32,16 @@ record Resource(String description, String storage, List<Child> children, List<A
             }
             sort(attributes);
         }
-        String storage = node.get("storage").asString("configuration");
+        String storage = null;
+        if (node.hasDefined("storage")) {
+            storage = node.get("storage").asString("configuration");
+        }
+        String description = null;
+        if (node.hasDefined("description")) {
+            description = node.get("description").asString();
+        }
 
-        return new Resource(node.get("description").asString(), storage, children, attributes);
+        return new Resource(description, storage, children, attributes);
     }
 }
 
