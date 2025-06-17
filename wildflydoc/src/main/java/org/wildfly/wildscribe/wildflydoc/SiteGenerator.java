@@ -14,7 +14,11 @@ import jakarta.inject.Inject;
 import org.jboss.dmr.ModelNode;
 
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.stream.Stream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 @Dependent
 public class SiteGenerator {
@@ -30,13 +34,17 @@ public class SiteGenerator {
 
         Files.createDirectories(outputDirectory);
 
+        Path docPath = outputDirectory.resolve("doc");
+
         try (InputStream in = Files.newInputStream(modelFile)) {
             ModelNode rootDescription = ModelNode.fromJSONStream(in);
 
-            generateResource(outputDirectory, featurePackGAV, rootDescription);
+            generateResource(docPath, featurePackGAV, rootDescription);
         }
 
-        System.out.println("✏️ Site generated at " + outputDirectory);
+        System.out.println("✏️ Site generated at " + docPath);
+
+        zipDirectory(outputDirectory, featurePackGAV , docPath);
     }
 
     private static void writeToFile(String content, Path file) throws IOException {
@@ -48,7 +56,29 @@ public class SiteGenerator {
         Files.writeString(file, content, StandardCharsets.UTF_8);
     }
 
-    private void generateResource(Path outputDirectory, String featurePackGAV, ModelNode rootDescription, PathElement... path) throws IOException {
+    public static void zipDirectory(Path outputDirectory, String name, Path sourceDirPath) throws IOException {
+        Path zipPath = outputDirectory.resolve(name + "-doc.zip");
+        try (
+                ZipOutputStream zs = new ZipOutputStream(Files.newOutputStream(zipPath));
+                Stream<Path> stream = Files.walk(sourceDirPath)) {
+            stream.filter(path -> !Files.isDirectory(path))
+                    .forEach(path -> {
+                        ZipEntry zipEntry = new ZipEntry(sourceDirPath.relativize(path).toString().replace("\\", "/"));
+                        try {
+                            zs.putNextEntry(zipEntry);
+                            Files.copy(path, zs);
+                            zs.closeEntry();
+                        } catch (IOException e) {
+                            System.err.println("Failed to add file to zip: " + path);
+                            e.printStackTrace();
+                        }
+                    });
+        }
+        System.out.println("📁 Archive generated at " + zipPath);
+    }
+
+    private void generateResource(Path outputDirectory, String featurePackGAV, ModelNode
+            rootDescription, PathElement... path) throws IOException {
         PathAddress address = PathAddress.pathAddress(path);
         final Resource resource = Resource.fromModelNode(address, rootDescription, Collections.emptyMap());
         final String currentUrl = buildCurrentUrl(path);
